@@ -1,0 +1,27 @@
+---复制table
+function table.clone(object)
+    local lookup_table = {}
+    local function _copy(object)
+        if type(object) ~= "table" then
+            return object
+        elseif lookup_table[object] then
+            return lookup_table[object]
+        end
+        local newObject = {}
+        lookup_table[object] = newObject
+        for key, value in pairs(object) do
+            newObject[_copy(key)] = _copy(value)
+        end
+        return setmetatable(newObject, getmetatable(object))
+    end
+    return _copy(object)
+end
+
+---CSharp数组转table
+function table.cs_array_to_table(arr)
+    local t = {};
+    for i = 0, arr.Length - 1 do
+        arr.insert(t, arr[i]);
+    end
+    return t;
+end

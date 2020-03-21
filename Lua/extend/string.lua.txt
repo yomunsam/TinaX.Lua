@@ -1,0 +1,52 @@
+--[[
+    字符串扩展
+
+    -string.split   --字符串分割(待分割文本,分割符) 返回值：字符串table
+]]
+
+---分割字符串
+function string.split(inputstr, sep)
+    if sep == nil then
+            sep = "%s"
+    end
+    local t={} ; i=1
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+            t[i] = str
+            i = i + 1
+    end
+    return t
+end
+
+---删首尾空
+function string.trim(s) 
+    if s == nil then return "" end
+    return (string.gsub(s, "^%s*(.-)%s*$", "%1")) 
+end
+
+---删首空格
+function string.trim_start(s)
+    return string.gsub(s, "^[ \t\n\r]+", "")
+end
+
+---删尾空格
+function string.trim_end(s)
+    return string.gsub(s, "[ \t\n\r]+$", "")
+end
+
+---过滤字符串中的空字符
+function string.filterNullChar(str)
+    if not str then
+        return str
+    end
+    local retStr = ""
+    for char in string.gmatch(str,"[^%z]") do      -- 存在空字符，造成字符串截断
+        retStr = retStr..char
+    end
+    return retStr
+end
+
+---是否为空字符串
+function string.isNilOrEmpty(str)
+    str = string.filterNullChar(str)
+    return str == nil or str == ""
+end

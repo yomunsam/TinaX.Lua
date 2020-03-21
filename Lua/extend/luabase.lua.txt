@@ -1,0 +1,28 @@
+--[[
+    TinaX Framework
+
+]]
+
+
+
+function loadstringAsync(path,callback)
+    XCore.CSLuaManager:LoadStringAsync(path,function(func,error)
+        if(callback ~= nil) then 
+            callback(func,error);
+        end
+    end)
+end
+
+function requireAsync(path,callback)
+    loadstringAsync(path,function(func,err)
+        if(callback ~= nil) then
+            if(err == nil) then
+                local result = func();
+                callback(result,nil)
+            else
+                print("fail");
+                callback(nil,err)
+            end
+        end
+    end)
+end

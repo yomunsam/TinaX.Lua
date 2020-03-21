@@ -1,0 +1,14 @@
+-- TinaX.Lua entry file
+
+
+local init_list = {
+    "{tinax}.extend.luabase",
+    "{tinax}.extend.string",
+    "{tinax}.extend.class",
+    "{tinax}.extend.table",
+    "{tinax}.extend.logger",
+    "{tinax}.core.core",
+}
+
+
+return init_list;
