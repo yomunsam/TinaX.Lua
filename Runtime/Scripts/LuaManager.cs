@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TinaX;
 using TinaX.Lua.Const;
 using TinaX.Lua.Internal;
+using TinaX.Services;
 using UnityEngine;
 using XLua;
 
@@ -178,20 +179,32 @@ namespace TinaX.Lua
 
         private async Task InitInternalEntry()
         {
-            string final_path = InternalLuaEntryPath;
-            LuaRequireToPath(ref final_path);
-            TextAsset ta = await Assets.LoadAsync<TextAsset>(final_path);
-            object[] obj_result = mLuaVM.DoString(ta.bytes, final_path);
-            LuaTable table = (LuaTable)obj_result[0];
-            List<string> init_list = table.Cast<List<string>>();
-
-            List<Task> list_task = new List<Task>();
-            foreach(var item in init_list)
+            try
             {
-                list_task.Add(require_init_file(item));
+                string final_path = InternalLuaEntryPath;
+                LuaRequireToPath(ref final_path);
+                TextAsset ta = await Assets.LoadAsync<TextAsset>(final_path);
+                object[] obj_result = mLuaVM.DoString(ta.bytes, final_path);
+                LuaTable table = (LuaTable)obj_result[0];
+                List<string> init_list = table.Cast<List<string>>();
+
+                List<Task> list_task = new List<Task>();
+                foreach (var item in init_list)
+                {
+                    list_task.Add(require_init_file(item));
+                }
+                Debug.Log("准备等待他们");
+                await Task.WhenAll(list_task);
+                Assets.Release(ta);
             }
-            await Task.WhenAll(list_task);
-            Assets.Release(ta);
+            catch(XException e)
+            {
+                throw e;
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         private async Task require_init_file(string req_str)

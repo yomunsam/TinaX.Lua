@@ -310,7 +310,7 @@ namespace TinaX.Lua
             this.func_applicationQuit?.Invoke();
         }
 
-        public override void SendMessage(string messageName, params object[] args)
+        public override void SendMsg(string messageName, params object[] args)
         {
             if(scriptData!= null)
             {

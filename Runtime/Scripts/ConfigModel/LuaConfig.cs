@@ -15,7 +15,7 @@ namespace TinaX.Lua.Internal
         public string LuaFileExtensionName = ".lua.txt";
 
 
-        public string FrameworkInternalLuaFolderLoadPath = "Assets/TinaX/Lua"; //内置资源文件夹在加载时的根目录路径
+        public string FrameworkInternalLuaFolderLoadPath = "Assets/TinaX/Lua/Lua"; //内置资源文件夹在加载时的根目录路径
 
         public string EntryLuaFileLoadPath; //入口文件地址
     }

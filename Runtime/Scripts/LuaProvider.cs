@@ -7,6 +7,7 @@ using TinaX.Services;
 
 namespace TinaX.Lua
 {
+    [XServiceProviderOrder(100)]
     public class LuaProvider : IXServiceProvider
     {
         public string ServiceName => Const.LuaConst.ServiceName;
