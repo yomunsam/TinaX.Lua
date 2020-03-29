@@ -61,7 +61,7 @@ namespace TinaXEditor.Lua.Internal
             typeof(TinaX.IXCore),
             typeof(TinaX.TimeMachine),
             typeof(TinaX.Systems.ITimeTicket),
-
+            typeof(TinaX.XEvent),
             #endregion
 
 
@@ -87,6 +87,7 @@ namespace TinaXEditor.Lua.Internal
             typeof(Action<UnityEngine.Object>),
             typeof(Action<UnityEngine.Object,TinaX.XException>),
             typeof(Action<LuaFunction, Exception>),
+            typeof(Action<object>),
         };
 
         [BlackList]
@@ -117,6 +118,15 @@ namespace TinaXEditor.Lua.Internal
             }
             return false;
         };
+
+        [BlackList]
+        public static List<List<string>> BlackList = new List<List<string>>()  {
+            //Unity--------------------------------------------
+            new List<string>(){ "UnityEngine.UI.Text", "OnRebuildRequested"},
+            new List<string>(){ "UnityEngine.MonoBehaviour", "runInEditMode"},
+
+        };
+
     }
 }
 

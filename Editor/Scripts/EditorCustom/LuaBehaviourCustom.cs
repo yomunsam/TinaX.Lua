@@ -11,14 +11,12 @@ namespace TinaXEditor.Lua.EditorCustom
     public class LuaBehaviourCustom : XComponentCustom
     {
         private LuaBehaviour __target;
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            __target = (LuaBehaviour)target;
-        }
+
 
         public override void OnInspectorGUI()
         {
+            if (__target == null)
+                __target = (LuaBehaviour)target;
             GUILayout.Space(5);
             //Lua Script
             EditorGUILayout.BeginHorizontal();

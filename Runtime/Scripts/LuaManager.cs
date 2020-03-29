@@ -193,7 +193,6 @@ namespace TinaX.Lua
                 {
                     list_task.Add(require_init_file(item));
                 }
-                Debug.Log("准备等待他们");
                 await Task.WhenAll(list_task);
                 Assets.Release(ta);
             }
