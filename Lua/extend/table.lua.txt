@@ -30,7 +30,7 @@ end
 
 
 ---生成一个可数据绑定的table
-function table.Create(data)
+function table.create(data)
     local re_table = {}
     local mt;
     mt = {
@@ -75,11 +75,11 @@ function table.Create(data)
             re_table[k] = v
         end
     end
-    function re_table:Listen(func)
-        table.Listen(self,func);
+    function re_table:listen(func)
+        return table.listen(self,func);
     end
-    function re_table:ListenKey(key,func,invoke_now)
-        table.ListenKey(self,key,func,invoke_now)
+    function re_table:listenKey(key,func,invoke_now)
+        return table.listenKey(self,key,func,invoke_now)
     end
     return re_table
 end
@@ -87,7 +87,7 @@ end
 ---对table创建一个监听,回调参数为key,value.
 --@tparam bindable_table _table 可被数据绑定的table
 --@tparam function func 回调方法
-function table.Listen(_table,func) 
+function table.listen(_table,func) 
     --检查是不是"可绑定监听"的table
     local mt = getmetatable(_table)
     if mt == nil then 
@@ -105,7 +105,7 @@ function table.Listen(_table,func)
     }
     function _ticket:remove()
         if(self.table ~= nil and self.func_code ~= nil) then
-            table.RemoveListen(self.table,self.func_code)
+            table.removeListen(self.table,self.func_code)
             self.func_code = nil;
             self.table = nil
         end
@@ -116,7 +116,7 @@ end
 ---移除监听
 --@tparam bindable_table _table 可被数据绑定的table
 --@tparam function func 回调方法
-function table.RemoveListen(_table,func)
+function table.removeListen(_table,func)
     local mt = getmetatable(_table)
     if mt == nil then 
         return
@@ -136,7 +136,7 @@ end
 --@tparam bindable_key key 绑定的key
 --@tparam function func 回调方法
 --@bool invoke_now 注册后立即调用一次，默认为false
-function table.ListenKey(_table,key,func,invoke_now)
+function table.listenKey(_table,key,func,invoke_now)
     --检查是不是"可绑定监听"的table
     local mt = getmetatable(_table)
     if mt == nil then 
@@ -147,6 +147,7 @@ function table.ListenKey(_table,key,func,invoke_now)
         printE("不可为该table创建监听")
         return
     end
+    if(invoke_now == nil) then invoke_now = false end
     if mt.t_bind_by_key____[key] == nil then mt.t_bind_by_key____[key] = {} end
     mt.t_bind_by_key____[key][tostring(func)] = func
     if invoke_now == true then
@@ -156,7 +157,7 @@ function table.ListenKey(_table,key,func,invoke_now)
     local _ticket = { _key = key, _code = tostring(func), _table = _table};
     function _ticket:remove()
         if(self._key ~= nil and self._code ~= nil and self._table ~= nil) then 
-            table.RemoveListenKey(self._table, self._key, self._func)
+            table.removeListenKey(self._table, self._key, self._func)
             self._key = nil
             self._code = nil
             self._table = nil
@@ -168,7 +169,7 @@ end
 --@tparam bindable_table _table 可被数据绑定的table
 --@tparam bindable_key key 绑定的key
 --@tparam function func 回调方法
-function table.RemoveListenKey(_table,key,func)
+function table.removeListenKey(_table,key,func)
     --检查是不是"可绑定监听"的table
     local mt = getmetatable(_table)
     if mt == nil then 

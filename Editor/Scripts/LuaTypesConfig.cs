@@ -62,6 +62,7 @@ namespace TinaXEditor.Lua.Internal
             typeof(TinaX.TimeMachine),
             typeof(TinaX.Systems.ITimeTicket),
             typeof(TinaX.XEvent),
+            typeof(TinaX.Systems.IEventTicket),
             #endregion
 
 

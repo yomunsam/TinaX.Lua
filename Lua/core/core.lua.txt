@@ -2,3 +2,44 @@
 XCore = XCore or {}
 XCore.CSCore = CS.TinaX.XCore.MainInstance;
 XCore.CSLuaManager = XCore.CSCore:GetService(typeof(CS.TinaX.Lua.ILua));
+
+------ TinaX.Core system: XEvent
+
+XCore.Event = XCore.Event or {}
+
+function XCore.Event.Register(eventName, handler, eventGroup)
+    if (string.isNilOrEmpty(eventGroup)) then
+        eventGroup = CS.TinaX.XEvent.DefaultGroup
+    end
+    if (eventName == nil or type(eventName) ~= "string") then
+        printE("Register Event failed, event name is invalid.")
+        return;
+    end
+    if(handler == nil or type(handler) ~= "function") then
+        printE("Register Event failed, handler is invalid.");
+        return;
+    end
+    return CS.TinaX.XEvent.Register(eventName,handler,eventGroup);
+end
+
+function XCore.Event.Call(eventName, param, eventGroup)
+    if (string.isNilOrEmpty(eventGroup)) then
+        eventGroup = CS.TinaX.XEvent.DefaultGroup
+    end
+    if (eventName == nil or type(eventName) ~= "string") then
+        printE("Register Event failed, event name is invalid.")
+        return;
+    end
+    CS.TinaX.XEvent.Call(eventName,param,eventGroup);
+end
+
+function XCore.Event.Remove(handler, eventName, eventGroup)
+    if(string.isNilOrEmpty(eventName) and string.isNilOrEmpty(eventGroup)) then
+        CS.TinaX.XEvent.Remove(handler);
+    else
+        if(string.isNilOrEmpty(eventGroup))then
+            eventGroup = CS.TinaX.XEvent.DefaultGroup
+        end
+        CS.TinaX.XEvent.Remove(handler,eventName,eventGroup);
+    end
+end

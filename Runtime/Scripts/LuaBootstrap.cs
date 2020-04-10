@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinaX;
 
 namespace TinaX.Lua.Internal
 {
@@ -14,7 +9,14 @@ namespace TinaX.Lua.Internal
         {
             if(TinaX.XCore.MainInstance.TryGetService<ILuaInternal>(out var lua))
             {
-                lua.RequireEntryFile();
+                try
+                {
+                    lua.RequireEntryFile();
+                }
+                catch(Exception e)
+                {
+                    UnityEngine.Debug.LogException(e);
+                }
             }
         }
         public void OnAppRestart() { }
