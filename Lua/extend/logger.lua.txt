@@ -1,25 +1,26 @@
+local cs_debug =CS.UnityEngine.Debug;
 
 function print(content,context)
     if content ~= nil then 
         if(context == nil) then
-            CS.UnityEngine.Debug.Log("[X.Lua] " .. content .. debug.traceback("",2))
+            cs_debug.Log("[X.Lua] " .. (XCore.Logger.EnableTraceback and (content .. debug.traceback("",2)) or content))
         else
-            CS.UnityEngine.Debug.Log("[X.Lua] " .. content .. debug.traceback("",2), context)
+            cs_debug.Log("[X.Lua] " ..  (XCore.Logger.EnableTraceback and (content .. debug.traceback("",2)) or content), context)
         end
     else
-        CS.UnityEngine.Debug.Log("[X.Lua] **nil message**".. debug.traceback("",2))
+        cs_debug.Log("[X.Lua] **nil message**".. (XCore.Logger.EnableTraceback and debug.traceback("",2) or ""))
     end
 end
 
 function printE(content,context)
     if (content ~= nil) then
         if(context == nil) then
-            CS.UnityEngine.Debug.LogError("[X.Lua] " .. content .. debug.traceback("",2))
+            cs_debug.LogError("[X.Lua] " .. (XCore.Logger.EnableTraceback and (content .. debug.traceback("",2)) or content))
         else
-            CS.UnityEngine.Debug.LogError("[X.Lua] " .. content .. debug.traceback("",2), context)
+            cs_debug.LogError("[X.Lua] " .. (XCore.Logger.EnableTraceback and (content .. debug.traceback("",2)) or content), context)
         end
     else
-        CS.UnityEngine.Debug.LogError("[X.Lua] **nil message**".. debug.traceback("",2))
+        cs_debug.LogError("[X.Lua] **nil message**".. (XCore.Logger.EnableTraceback and debug.traceback("",2) or ""));
     end
 end
 

@@ -3,6 +3,10 @@ XCore = XCore or {}
 XCore.CSCore = CS.TinaX.XCore.MainInstance;
 XCore.CSLuaManager = XCore.CSCore:GetService(typeof(CS.TinaX.Lua.ILua));
 
+------ Log
+XCore.Logger = XCore.Logger or {}
+XCore.Logger.EnableTraceback = true;
+
 ------ TinaX.Core system: XEvent
 
 XCore.Event = XCore.Event or {}
