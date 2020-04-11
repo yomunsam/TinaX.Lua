@@ -27,9 +27,9 @@ end
 function printW(content,context)
     if (content ~= nil) then
         if(context == nil) then
-            CS.UnityEngine.Debug.LogWarning("[X.Lua] " .. content .. debug.traceback("",2))
+            CS.UnityEngine.Debug.LogWarning("[X.Lua] " .. (XCore.Logger.EnableTraceback and content .. debug.traceback("",2) or content))
         else
-            CS.UnityEngine.Debug.LogWarning("[X.Lua] " .. content .. debug.traceback("",2), context)
+            CS.UnityEngine.Debug.LogWarning("[X.Lua] " .. (XCore.Logger.EnableTraceback and content .. debug.traceback("",2) or content), context)
         end
     else
         CS.UnityEngine.Debug.LogWarning("[X.Lua] **nil message**".. debug.traceback("",2))
