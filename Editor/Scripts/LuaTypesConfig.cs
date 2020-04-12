@@ -63,6 +63,10 @@ namespace TinaXEditor.Lua.Internal
             typeof(TinaX.Systems.ITimeTicket),
             typeof(TinaX.XEvent),
             typeof(TinaX.Systems.IEventTicket),
+
+            typeof(TinaX.GameObjectExtends),
+            typeof(TinaX.StringExtend),
+            typeof(TinaX.UObjectExtend),
             #endregion
 
 
