@@ -22,8 +22,8 @@ namespace TinaX.Lua
         [HideInInspector]
         public LuaTable scriptData;
 
-        private ILua mLuaManager;
-        private Internal.ILuaInternal mLuaManagerInternal;
+        private ILua m_LuaManager;
+        private Internal.ILuaInternal m_LuaManagerInternal;
 
         private Action func_enable;
         private Action func_disable;
@@ -47,12 +47,35 @@ namespace TinaX.Lua
         private bool mEnabled = false;
         private bool mDisabled = false;
 
+        private Utils.DisposableGroup __DisposableGroup;
+        private Utils.DisposableGroup m_DisposableGroup
+        {
+            get
+            {
+                if (__DisposableGroup == null)
+                    __DisposableGroup = new Utils.DisposableGroup();
+                return __DisposableGroup;
+            }
+        }
+
         private ITimeTicket mUpdateTicks;
         private ITimeTicket mLateUpdateTicks;
         private ITimeTicket mFixedUpdateTicks;
 
         private ReleaseTextAssetDelegate mAsset_Release_Callback;
         private bool SetLuaScript_Flag = false;
+
+        /// <summary>
+        /// Register Event Listener
+        /// It will be auto unregister when luabehaviour destroy.
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="handler"></param>
+        /// <param name="eventGroup"></param>
+        public void RegisterEvent(string eventName, Action<object> handler, string eventGroup = XEvent.DefaultGroup)
+        {
+            m_DisposableGroup.RegisterEvent(eventName, handler, eventGroup);
+        }
 
         public void SetLuaScript(TextAsset lua_text_asset, ReleaseTextAssetDelegate release_asset_callback)
         {
@@ -132,15 +155,15 @@ namespace TinaX.Lua
 
         private void InitLuaScript()
         {
-            if(XCore.MainInstance == null || !XCore.GetMainInstance().TryGetService(out mLuaManager) || !XCore.GetMainInstance().TryGetService(out mLuaManagerInternal))
+            if(XCore.MainInstance == null || !XCore.GetMainInstance().TryGetService(out m_LuaManager) || !XCore.GetMainInstance().TryGetService(out m_LuaManagerInternal))
             {
                 Debug.LogError("[LuaBehaviour] Lua Service not ready.");
                 return;
             }
-            scriptData = mLuaManagerInternal.LuaVM.NewTable();
-            LuaTable meta = mLuaManagerInternal.LuaVM.NewTable();
+            scriptData = m_LuaManagerInternal.LuaVM.NewTable();
+            LuaTable meta = m_LuaManagerInternal.LuaVM.NewTable();
             //元表，让luaBehaviour可以访问_G
-            meta.Set("__index", mLuaManager.LuaVM.Global);
+            meta.Set("__index", m_LuaManager.LuaVM.Global);
             scriptData.SetMetaTable(meta);
             meta.Dispose();
 
@@ -167,7 +190,7 @@ namespace TinaX.Lua
                 }
             }
 
-            mLuaManagerInternal.LuaVM.DoString(LuaScript.bytes, LuaScript.name, scriptData);
+            m_LuaManagerInternal.LuaVM.DoString(LuaScript.bytes, LuaScript.name, scriptData);
 
             scriptData.Get("OnEnable", out func_enable);
             scriptData.Get("OnDisable", out func_disable);
@@ -236,6 +259,8 @@ namespace TinaX.Lua
 
         private void OnDestroy()
         {
+
+            __DisposableGroup?.Dispose();
             //Updates
             if(mUpdateTicks != null)
             {
