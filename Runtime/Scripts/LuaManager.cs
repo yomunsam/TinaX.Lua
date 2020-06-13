@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using TinaX;
 using TinaX.Lua.Const;
 using TinaX.Lua.Internal;
 using TinaX.Services;
@@ -14,66 +11,68 @@ namespace TinaX.Lua
 {
     public class LuaManager : ILua, ILuaInternal
     {
-        private const string InternalLuaSign = @"{tinax}";
-        private const string mInternal_Lua_Extension = ".lua.txt";
-        private const string InternalLuaEntryPath = @"{tinax}.init.init";
+        private const string c_InternalLuaSign = @"{tinax}";
+        private const string c_Internal_Lua_Extension = ".lua.txt";
+        private const string c_InternalLuaEntryPath = @"{tinax}.init.init";
 
-        private LuaConfig mConfig;
-        private XException mStartException;
-        private TinaX.Services.IAssetService Assets;
+        private LuaConfig m_Config;
+        private TinaX.Services.IAssetService m_Assets;
 
-        private LuaEnv mLuaVM;
-        private LuaEnv.CustomLoader mLoader;
-        private static float lastGCTime = 0;
-        private const float GCInterval = 1; //1 second
+        private LuaEnv m_LuaVM;
+        private LuaEnv.CustomLoader m_Loader;
+        private static float m_lastGCTime = 0;
+        private const float m_GCInterval = 1; //1 second
 
-        private string mInternal_Lua_Folder_Load_Path;
-        private string mInternal_Lua_Folder_Load_Path_withSlash;
+        private string m_Internal_Lua_Folder_Load_Path;
+        private string m_Internal_Lua_Folder_Load_Path_withSlash;
 
-        private string mLuaExtension;
-        private bool mInited;
-        private TinaX.Systems.ITimeTicket mUpdateTicket;
+        private string m_LuaExtension;
+        private bool m_Inited;
+        private TinaX.Systems.ITimeTicket m_UpdateTicket;
 
-        private LuaFunction mEntryFunc;
+        private LuaFunction m_EntryFunc;
 
-        public LuaManager()
+        private CustomLoadHandlerManager m_CustomLoadHandlerManager = new CustomLoadHandlerManager();
+
+        public LuaManager(IAssetService buildInAssets)
         {
-            mLuaVM = new LuaEnv();
+            m_Assets = buildInAssets;
+            m_LuaVM = new LuaEnv();
         }
 
-        public LuaEnv LuaVM => mLuaVM;
-        public bool Inited => mInited;
-
-        public async Task<bool> Start()
+        ~LuaManager()
         {
-            if (mInited) return true;
-            mConfig = XConfig.GetConfig<LuaConfig>(LuaConst.ConfigPath_Resources);
-            if (mConfig == null)
-            {
-                mStartException = new XException("[TinaX.ILRuntime] Connot found config file."); ;
-                return false;
-            }
-            if (!mConfig.EnableLua) return true;
+            m_UpdateTicket?.Unregister();
+        }
 
-            mInternal_Lua_Folder_Load_Path = mConfig.FrameworkInternalLuaFolderLoadPath;
-            if (!mInternal_Lua_Folder_Load_Path.IsNullOrEmpty())
-            {
-                if (mInternal_Lua_Folder_Load_Path.EndsWith("/"))
-                    mInternal_Lua_Folder_Load_Path = mInternal_Lua_Folder_Load_Path.Substring(0, mInternal_Lua_Folder_Load_Path.Length - 1);
-                mInternal_Lua_Folder_Load_Path_withSlash = mInternal_Lua_Folder_Load_Path + "/";
-            }
-            mLuaExtension = mConfig.LuaFileExtensionName;
-            if (!mLuaExtension.StartsWith("."))
-                mLuaExtension = "." + mLuaExtension;
+        public LuaEnv LuaVM => m_LuaVM;
+        public bool Inited => m_Inited;
 
-            if(!XCore.MainInstance.TryGetBuiltinService(out Assets))
-            {
-                mStartException = new XException("[TinaX.ILRuntime]" + (IsChinese? "没有任何服务实现了Framework中的内置的资产加载接口": "No service implements the built-in asset loading interface in Framework")); 
-                return false;
-            }
+        public async Task<XException> Start()
+        {
+            if (m_Inited) return null;
+            m_Config = XConfig.GetConfig<LuaConfig>(LuaConst.ConfigPath_Resources);
+            if (m_Config == null)
+                return new XException("[TinaX.ILRuntime] Connot found config file.");
 
-            mLoader = LoadLuaFiles;
-            mLuaVM.AddLoader(mLoader);
+            if (!m_Config.EnableLua) return null;
+
+            m_Internal_Lua_Folder_Load_Path = m_Config.FrameworkInternalLuaFolderLoadPath;
+            if (!m_Internal_Lua_Folder_Load_Path.IsNullOrEmpty())
+            {
+                if (m_Internal_Lua_Folder_Load_Path.EndsWith("/"))
+                    m_Internal_Lua_Folder_Load_Path = m_Internal_Lua_Folder_Load_Path.Substring(0, m_Internal_Lua_Folder_Load_Path.Length - 1);
+                m_Internal_Lua_Folder_Load_Path_withSlash = m_Internal_Lua_Folder_Load_Path + "/";
+            }
+            m_LuaExtension = m_Config.LuaFileExtensionName;
+            if (!m_LuaExtension.StartsWith("."))
+                m_LuaExtension = "." + m_LuaExtension;
+
+            if(m_Assets == null)
+                return new XException("[TinaX.ILRuntime]" + (IsChinese ? "没有任何服务实现了Framework中的内置的资产加载接口" : "No service implements the built-in asset loading interface in Framework"));
+
+            m_Loader = LoadLuaFiles;
+            m_LuaVM.AddLoader(m_Loader);
 
             try
             {
@@ -81,36 +80,37 @@ namespace TinaX.Lua
             }
             catch(XException e)
             {
-                mStartException = e;
-                return false;
+                return e;
             }
 
             //准备好入口文件
-            if(!mConfig.EntryLuaFileLoadPath.IsNullOrEmpty())
+            if(!m_Config.EntryLuaFileLoadPath.IsNullOrEmpty())
             {
                 try
                 {
-                    TextAsset entry_ta = await Assets.LoadAsync<TextAsset>(mConfig.EntryLuaFileLoadPath);
-                    mEntryFunc = mLuaVM.LoadString<LuaFunction>(entry_ta.bytes, mConfig.EntryLuaFileLoadPath);
-                    Assets.Release(entry_ta);
+                    TextAsset entry_ta = await m_Assets.LoadAsync<TextAsset>(m_Config.EntryLuaFileLoadPath);
+                    m_EntryFunc = m_LuaVM.LoadString<LuaFunction>(entry_ta.bytes, m_Config.EntryLuaFileLoadPath);
+                    m_Assets.Release(entry_ta);
                 }
                 catch(XException e)
                 {
-                    mStartException = e;
-                    return false;
+                    return e;
                 }
             }
 
-            if(mUpdateTicket != null)
-                mUpdateTicket.Unregister();
-            mUpdateTicket = TimeMachine.RegisterUpdate(OnUpdate);
+            if(m_UpdateTicket != null)
+                m_UpdateTicket.Unregister();
+            m_UpdateTicket = TimeMachine.RegisterUpdate(OnUpdate);
 
-            await Task.Yield();
-            mInited = true;
-            return true;
+            m_Inited = true;
+            return null;
         }
 
-        public XException GetStartException() => mStartException;
+        public ILua ConfigureCustomLoadHandler(Action<CustomLoadHandlerManager> options)
+        {
+            options?.Invoke(m_CustomLoadHandlerManager);
+            return this;
+        }
 
         public void LuaRequireToPath(ref string fileName)
         {
@@ -119,17 +119,17 @@ namespace TinaX.Lua
 
             bool framework_file = false;
             //转义
-            if (fileName.StartsWith(InternalLuaSign))
+            if (fileName.StartsWith(c_InternalLuaSign))
             {
-                fileName = fileName.Replace(InternalLuaSign, mInternal_Lua_Folder_Load_Path);
+                fileName = fileName.Replace(c_InternalLuaSign, m_Internal_Lua_Folder_Load_Path);
                 framework_file = true;
             }
 
             //后缀
             if (framework_file)
-                fileName += mInternal_Lua_Extension;
+                fileName += c_Internal_Lua_Extension;
             else
-                fileName += mLuaExtension;
+                fileName += m_LuaExtension;
 
         }
 
@@ -137,7 +137,7 @@ namespace TinaX.Lua
         {
             string final_path = require_text;
             LuaRequireToPath(ref final_path);
-            Assets.LoadAsync(final_path, typeof(TextAsset), (asset, error) =>
+            m_Assets.LoadAsync(final_path, typeof(TextAsset), (asset, error) =>
             {
                 if (error != null)
                 {
@@ -145,29 +145,35 @@ namespace TinaX.Lua
                 }
                 else
                 {
-                    var func = mLuaVM.LoadString<LuaFunction>(((TextAsset)asset).bytes, final_path);
+                    var func = m_LuaVM.LoadString<LuaFunction>(((TextAsset)asset).bytes, final_path);
                     callback?.Invoke(func, null);
-                    Assets.Release(asset);
+                    m_Assets.Release(asset);
                 }
             });
         }
 
         public void RequireEntryFile()
         {
-            if (mEntryFunc != null)
-                mEntryFunc.Call();
+            if (m_EntryFunc != null)
+                m_EntryFunc.Call();
         }
 
         private byte[] LoadLuaFiles(ref string fileName)
         {
+            if(m_CustomLoadHandlerManager.TryGetHandler(fileName,out var handler)) //自定义加载
+            {
+                return handler?.Invoke();
+            }
+
+
             LuaRequireToPath(ref fileName);
 
             //使用同步接口加载资源
             try
             {
-                var ta = Assets.Load<TextAsset>(fileName);
+                var ta = m_Assets.Load<TextAsset>(fileName);
                 byte[] code = ta.bytes;
-                Assets.Release(ta);
+                m_Assets.Release(ta);
                 return code;
             }
             catch
@@ -181,10 +187,10 @@ namespace TinaX.Lua
         {
             try
             {
-                string final_path = InternalLuaEntryPath;
+                string final_path = c_InternalLuaEntryPath;
                 LuaRequireToPath(ref final_path);
-                TextAsset ta = await Assets.LoadAsync<TextAsset>(final_path);
-                object[] obj_result = mLuaVM.DoString(ta.bytes, final_path);
+                TextAsset ta = await m_Assets.LoadAsync<TextAsset>(final_path);
+                object[] obj_result = m_LuaVM.DoString(ta.bytes, final_path);
                 LuaTable table = (LuaTable)obj_result[0];
                 List<string> init_list = table.Cast<List<string>>();
 
@@ -194,7 +200,7 @@ namespace TinaX.Lua
                     list_task.Add(require_init_file(item));
                 }
                 await Task.WhenAll(list_task);
-                Assets.Release(ta);
+                m_Assets.Release(ta);
             }
             catch(XException e)
             {
@@ -210,17 +216,17 @@ namespace TinaX.Lua
         {
             string final_path = req_str;
             LuaRequireToPath(ref final_path);
-            TextAsset ta = await Assets.LoadAsync<TextAsset>(final_path);
-            mLuaVM.DoString(ta.bytes, final_path);
-            Assets.Release(ta);
+            TextAsset ta = await m_Assets.LoadAsync<TextAsset>(final_path);
+            m_LuaVM.DoString(ta.bytes, final_path);
+            m_Assets.Release(ta);
         }
 
         private void OnUpdate()
         {
-            if (Time.time - lastGCTime > GCInterval)
+            if (Time.time - m_lastGCTime > m_GCInterval)
             {
-                mLuaVM.Tick();
-                lastGCTime = Time.time;
+                m_LuaVM.Tick();
+                m_lastGCTime = Time.time;
             }
         }
 

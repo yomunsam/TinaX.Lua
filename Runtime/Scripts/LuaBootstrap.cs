@@ -4,10 +4,10 @@ namespace TinaX.Lua.Internal
 {
     public class LuaBootstrap : IXBootstrap
     {
-        public void OnInit() { }
-        public void OnStart()
+        public void OnInit(IXCore core) { }
+        public void OnStart(IXCore core)
         {
-            if(TinaX.XCore.MainInstance.TryGetService<ILuaInternal>(out var lua))
+            if(core.Services.TryGet<ILuaInternal>(out var lua))
             {
                 try
                 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using XLua;
 
 namespace TinaX.Lua.Internal
@@ -12,8 +8,7 @@ namespace TinaX.Lua.Internal
         bool Inited { get; }
         LuaEnv LuaVM { get; }
 
-        XException GetStartException();
-        Task<bool> Start();
+        Task<XException> Start();
         void RequireEntryFile();
     }
 }

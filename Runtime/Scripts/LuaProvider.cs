@@ -12,34 +12,23 @@ namespace TinaX.Lua
     {
         public string ServiceName => Const.LuaConst.ServiceName;
 
-        public Task<bool> OnInit() => Task.FromResult(true);
-
-        public XException GetInitException() => null;
+        public Task<XException> OnInit(IXCore core) => Task.FromResult<XException>(null);
 
 
-        public void OnServiceRegister()
+
+        public void OnServiceRegister(IXCore core)
         {
-            XCore.GetMainInstance().BindSingletonService<ILua, LuaManager>().SetAlias<Internal.ILuaInternal>();
+            core.Services.Singleton<ILua, LuaManager>()
+                .SetAlias<Internal.ILuaInternal>();
         }
 
 
-        public Task<bool> OnStart()
-        {
-            return XCore.GetMainInstance().GetService<Internal.ILuaInternal>().Start();
-        }
-        public XException GetStartException()
-        {
-            return XCore.GetMainInstance().GetService<Internal.ILuaInternal>().GetStartException();
-        }
-
-        
+        public Task<XException> OnStart(IXCore core)
+            => core.GetService<Internal.ILuaInternal>().Start();
 
         public void OnQuit() { }
 
         public Task OnRestart() => Task.CompletedTask;
-
-        
-
         
     }
 }
