@@ -350,6 +350,11 @@ namespace TinaX.Lua
             }
         }
 
+        public override void SendQueueMsg(string messageName, params object[] param)
+        {
+            this.SendMsg(messageName, param);
+        }
+
     }
 
 }
